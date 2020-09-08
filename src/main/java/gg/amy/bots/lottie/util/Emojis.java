@@ -1,4 +1,4 @@
-package gg.amy.bots.lottie;
+package gg.amy.bots.lottie.util;
 
 /**
  * @author amy

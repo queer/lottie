@@ -4,6 +4,7 @@ import com.mewna.catnip.Catnip;
 import com.mewna.catnip.CatnipOptions;
 import com.mewna.catnip.shard.DiscordEvent;
 import com.mewna.catnip.shard.GatewayIntent;
+import gg.amy.bots.lottie.util.Env;
 import lombok.Getter;
 
 /**
