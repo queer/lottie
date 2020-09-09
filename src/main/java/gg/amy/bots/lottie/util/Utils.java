@@ -8,6 +8,7 @@ import com.mewna.catnip.shard.DiscordEvent;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 
+import javax.annotation.Nonnegative;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,28 +20,40 @@ import java.util.stream.IntStream;
  */
 public final class Utils {
     private static final Map<String, Integer> EMOJIS_TO_INTEGERS = Map.of(
-            "0️⃣", 0,
-            "1️⃣", 1,
-            "2️⃣", 2,
-            "3️⃣", 3,
-            "4️⃣", 4,
-            "5️⃣", 5,
-            "️6️⃣", 6,
-            "7️⃣", 7,
-            "8️⃣", 8,
-            "9️⃣", 9
+            Emojis.ZERO, 0,
+            Emojis.ONE, 1,
+            Emojis.TWO, 2,
+            Emojis.THREE, 3,
+            Emojis.FOUR, 4,
+            Emojis.FIVE, 5,
+            Emojis.SIX, 6,
+            Emojis.SEVEN, 7,
+            Emojis.EIGHT, 8,
+            Emojis.NINE, 9
     );
     private static final Map<Integer, String> INTEGERS_TO_EMOJIS = Map.of(
-            0, "0️⃣",
-            1, "1️⃣",
-            2, "2️⃣",
-            3, "3️⃣",
-            4, "4️⃣",
-            5, "5️⃣",
-            6, "️6️⃣",
-            7, "7️⃣",
-            8, "8️⃣",
-            9, "9️⃣"
+            0, Emojis.ZERO,
+            1, Emojis.ONE,
+            2, Emojis.TWO,
+            3, Emojis.THREE,
+            4, Emojis.FOUR,
+            5, Emojis.FIVE,
+            6, Emojis.SIX,
+            7, Emojis.SEVEN,
+            8, Emojis.EIGHT,
+            9, Emojis.NINE
+    );
+    private static final Map<Integer, String> INTEGERS_TO_NAMES = Map.of(
+            0, "zero",
+            1, "one",
+            2, "two",
+            3, "three",
+            4, "four",
+            5, "five",
+            6, "six",
+            7, "seven",
+            8, "eight",
+            9, "none"
     );
     private static final List<String> CANCEL_STRINGS = List.of(
             "NONE",
@@ -56,7 +69,7 @@ public final class Utils {
     private Utils() {
     }
 
-    public static Completable addNumbers(final Message message, final IntStream range) {
+    public static Completable addNumberReactions(final Message message, final IntStream range) {
         return Completable.mergeArray(
                 range.mapToObj(INTEGERS_TO_EMOJIS::get)
                         .map(message::react)
@@ -98,5 +111,9 @@ public final class Utils {
 
     public static String cancelStringsFormatted() {
         return '`' + String.join("`, `", CANCEL_STRINGS) + '`';
+    }
+
+    public static String integerToName(@Nonnegative final int number) {
+        return INTEGERS_TO_NAMES.get(number);
     }
 }

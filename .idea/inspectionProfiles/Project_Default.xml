@@ -106,7 +106,7 @@
       <option name="useParameterizedTypeForCollectionMethods" value="true" />
       <option name="doNotWeakenToJavaLangObject" value="true" />
       <option name="onlyWeakentoInterface" value="true" />
-      <stopClasses>com.mewna.catnip.entity.user.User,com.grack.nanojson.JsonObject,com.grack.nanojson.JsonArray,com.mewna.catnip.rest.guild.GuildData,com.mewna.catnip.rest.guild.ChannelData,com.mewna.catnip.rest.guild.RoleData,com.mewna.catnip.entity.message.Message,com.mewna.catnip.entity.channel.Channel,com.mewna.catnip.entity.channel.MessageChannel</stopClasses>
+      <stopClasses>com.mewna.catnip.entity.user.User,com.grack.nanojson.JsonObject,com.grack.nanojson.JsonArray,com.mewna.catnip.rest.guild.GuildData,com.mewna.catnip.rest.guild.ChannelData,com.mewna.catnip.rest.guild.RoleData,com.mewna.catnip.entity.message.Message,com.mewna.catnip.entity.channel.Channel,com.mewna.catnip.entity.channel.MessageChannel,java.lang.String</stopClasses>
     </inspection_tool>
     <inspection_tool class="UnnecessarilyQualifiedInnerClassAccess" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ignoreReferencesNeedingImport" value="false" />
