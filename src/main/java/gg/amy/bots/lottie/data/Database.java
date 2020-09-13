@@ -5,10 +5,18 @@ package gg.amy.bots.lottie.data;
  * @since 9/8/20.
  */
 public class Database {
-    public GuildSettings settings(final String guildId) {
+    public GuildSettings guildSettings(final String guildId) {
         // TODO: Don't mock this
         return GuildSettings.builder()
                 .id(guildId)
+                .language("en_US")
+                .build();
+    }
+
+    public UserSettings userSettings(final String userId) {
+        // TODO: Don't mock this
+        return UserSettings.builder()
+                .id(userId)
                 .language("en_US")
                 .build();
     }

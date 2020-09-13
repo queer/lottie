@@ -1,8 +1,14 @@
 package gg.amy.bots.lottie;
 
+import com.mewna.catnip.entity.guild.Member;
 import com.mewna.catnip.entity.message.Message;
 import com.mewna.catnip.entity.user.User;
-import gg.amy.bots.lottie.data.GuildSettings;
+import com.mewna.catnip.entity.util.Permission;
+import gg.amy.bots.lottie.command.Context;
+import gg.amy.bots.lottie.command.annotation.Description;
+import gg.amy.bots.lottie.command.annotation.Names;
+import gg.amy.bots.lottie.command.annotation.Perms;
+import gg.amy.bots.lottie.command.annotation.Reactions;
 import gg.amy.bots.lottie.mod.ModAction;
 import gg.amy.bots.lottie.mod.ModActionType;
 import gg.amy.bots.lottie.mod.actions.BanAction;
@@ -13,8 +19,6 @@ import gg.amy.bots.lottie.util.Emojis;
 import gg.amy.bots.lottie.util.Utils;
 import io.reactivex.rxjava3.core.Single;
 
-import javax.annotation.Nonnull;
-import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -41,20 +45,18 @@ public class ModCommand {
             4, ModActionType.BAN
     );
 
-    private final Lottie lottie;
-
-    public ModCommand(@Nonnull final Lottie lottie) {
-        this.lottie = lottie;
-    }
-
-    public void run(final Message m) {
-        final var settings = lottie.database().settings(m.guildId());
-        if(m.mentionedUsers().isEmpty()) {
-            m.channel().sendMessage("?");
+    @Names({"mod", "moderate"})
+    @Reactions({"\uD83D\uDD28", "\uD83C\uDF4C"})
+    @Description("Run through the moderation flow on a user or set of users.")
+    @Perms(Permission.MANAGE_GUILD)
+    public void moderate(final Context ctx) {
+        if(ctx.mentions().isEmpty()) {
+            ctx.channel().sendMessage("?");
         } else {
-            m.channel().sendMessage(
-                    $$(settings, "action.menu.initial")
-                            .t("discordTags", m.mentionedUsers().stream()
+            ctx.channel().sendMessage(
+                    $$(ctx.effectiveLanguage(), "action.menu.initial")
+                            .t("discordTags", ctx.members().stream()
+                                    .map(Member::user)
                                     .map(User::discordTag)
                                     .collect(Collectors.joining(",")))
                             .en(1)
@@ -64,13 +66,11 @@ public class ModCommand {
                             .$()
             ).subscribe(menu -> {
                 Utils.addNumberReactions(menu, IntStream.rangeClosed(1, 4)).subscribe(() -> {
-                    Utils.awaitNumberReaction(menu, m.author(), IntStream.rangeClosed(1, 4)).subscribe(r -> {
+                    Utils.awaitNumberReaction(menu, ctx.user(), IntStream.rangeClosed(1, 4)).subscribe(r -> {
                         runAction(
                                 menu,
-                                m.author(),
-                                m.mentionedUsers(),
-                                emojiToModAction(r.emoji().name()),
-                                settings
+                                ctx,
+                                emojiToModAction(r.emoji().name())
                         );
                     });
                 });
@@ -78,17 +78,14 @@ public class ModCommand {
         }
     }
 
-    private void runAction(final Message message, final User mod, final Collection<User> targets,
-                           final ModAction action, final GuildSettings settings) {
+    private void runAction(final Message message, final Context ctx, final ModAction action) {
         message.catnip().rest().channel().deleteAllReactions(message.channelId(), message.id()).subscribe(() -> {
-
-
-            message.edit($$(settings, "action.menu.reason-prompt")
+            message.edit($$(ctx.effectiveLanguage(), "action.menu.reason-prompt")
                     .t("loading", Emojis.LOADING)
                     .t("action", action.name())
                     .t("cancelStrings", Utils.cancelStringsFormatted())
                     .$())
-                    .flatMap(__ -> Utils.awaitMessage(mod, message.channel()))
+                    .flatMap(__ -> Utils.awaitMessage(ctx.user(), message.channel()))
                     .flatMap(reason -> reason.delete().andThen(Single.just(reason)))
                     .flatMap(reason -> {
                         if(Utils.isCancel(reason.content())) {
@@ -99,11 +96,11 @@ public class ModCommand {
                     })
                     .subscribe(reason -> {
                         if(Utils.isCancel(reason.content())) {
-                            message.edit($(settings, "action.menu.cancelled"));
+                            message.edit($(ctx.effectiveLanguage(), "action.menu.cancelled"));
                         } else {
-                            message.edit($$(settings, "action.menu.applied")
-                                    .t("action", $(settings, "action.actions." + action.name()))
-                                    .t("discordTag", targets.stream()
+                            message.edit($$(ctx.effectiveLanguage(), "action.menu.applied")
+                                    .t("action", $(ctx.effectiveLanguage(), "action.actions." + action.name()))
+                                    .t("discordTag", ctx.mentions().stream()
                                             .map(User::discordTag)
                                             .collect(Collectors.joining(", ")))
                                     .t("reason", reason.content())

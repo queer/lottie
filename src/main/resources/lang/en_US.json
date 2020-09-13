@@ -1,7 +1,7 @@
 {
   "action": {
     "menu": {
-      "initial": "Moderation **$discordTags**:\n$one Warn\n$two Mute\n$three Kick \n$four Ban",
+      "initial": "Moderating: **$discordTags**:\n$one Warn\n$two Mute\n$three Kick \n$four Ban",
       "reason-prompt": "$loading Type the reason for the **$action**.\nRespond with any of the following to cancel:\n$cancelStrings",
       "cancelled": "Cancelled.",
       "applied": "**$action** applied to **$discordTag**.\n**Reason:** $reason"

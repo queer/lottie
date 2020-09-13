@@ -88,24 +88,10 @@ public class Translator {
     }
 
     /**
-     * Shortcut to {@link #$(String, String)}.
-     */
-    public static String $(@Nonnegative final GuildSettings settings, @Nonnull final String key) {
-        return $(settings.language(), key);
-    }
-
-    /**
      * Shortcut to {@link #translate(String, String)}.
      */
     public static String $(@Nonnull final String lang, @Nonnull final String key) {
         return translate(lang, key);
-    }
-
-    /**
-     * Shortcut to {@link #$$(String, String)}.
-     */
-    public static Translation $$(@Nonnegative final GuildSettings settings, @Nonnull final String key) {
-        return $$(settings.language(), key);
     }
 
     /**
