@@ -19,6 +19,6 @@ public final class WarningAction extends AbstractModAction {
     @Nonnull
     @Override
     public Completable apply(final Message message) {
-        return Completable.fromSingle(message.channel().sendMessage("DEBUG: warnt"));
+        return Completable.fromSingle(message.reply("DEBUG: warnt", false));
     }
 }

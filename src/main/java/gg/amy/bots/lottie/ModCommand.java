@@ -17,9 +17,11 @@ import gg.amy.bots.lottie.mod.actions.MuteAction;
 import gg.amy.bots.lottie.mod.actions.WarningAction;
 import gg.amy.bots.lottie.util.Emojis;
 import gg.amy.bots.lottie.util.Utils;
+import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -57,6 +59,8 @@ public class ModCommand {
                     $$(ctx.effectiveLanguage(), "action.menu.initial")
                             .t("discordTags", ctx.members().stream()
                                     .map(Member::user)
+                                    .map(Maybe::blockingGet)
+                                    .filter(Objects::nonNull)
                                     .map(User::discordTag)
                                     .collect(Collectors.joining(",")))
                             .en(1)
@@ -85,7 +89,7 @@ public class ModCommand {
                     .t("action", action.name())
                     .t("cancelStrings", Utils.cancelStringsFormatted())
                     .$())
-                    .flatMap(__ -> Utils.awaitMessage(ctx.user(), message.channel()))
+                    .flatMap(__ -> Utils.awaitMessage(ctx.user(), message.channelId()))
                     .flatMap(reason -> reason.delete().andThen(Single.just(reason)))
                     .flatMap(reason -> {
                         if(Utils.isCancel(reason.content())) {

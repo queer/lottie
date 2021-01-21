@@ -7,6 +7,7 @@ import com.mewna.catnip.entity.user.User;
 import gg.amy.bots.lottie.Lottie;
 import gg.amy.bots.lottie.data.GuildSettings;
 import gg.amy.bots.lottie.data.UserSettings;
+import io.reactivex.rxjava3.core.Maybe;
 import lombok.Builder;
 import lombok.Value;
 
@@ -32,6 +33,8 @@ public class Context {
     public List<Member> members() {
         return mentions.stream().map(User::id)
                 .map(guild::member)
+                // TODO: AAAAAAAAAAAAAA
+                .map(Maybe::blockingGet)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toUnmodifiableList());
     }

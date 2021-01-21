@@ -19,6 +19,6 @@ public class MuteAction extends AbstractModAction {
     @Nonnull
     @Override
     public Completable apply(final Message message) {
-        return Completable.fromSingle(message.channel().sendMessage("DEBUG: muted"));
+        return Completable.fromSingle(message.reply("DEBUG: muted", false));
     }
 }

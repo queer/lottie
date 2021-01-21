@@ -19,6 +19,6 @@ public class BanAction extends AbstractModAction {
     @Nonnull
     @Override
     public Completable apply(final Message message) {
-        return Completable.fromSingle(message.channel().sendMessage("DEBUG: bent"));
+        return Completable.fromSingle(message.reply("DEBUG: bent", false));
     }
 }

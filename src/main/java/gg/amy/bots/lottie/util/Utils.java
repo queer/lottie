@@ -92,10 +92,10 @@ public final class Utils {
                 .singleOrError();
     }
 
-    public static Single<Message> awaitMessage(final User user, final MessageChannel source) {
+    public static Single<Message> awaitMessage(final User user, final String channelId) {
         return user.catnip().observable(DiscordEvent.MESSAGE_CREATE)
                 .filter(m -> m.author().id().equals(user.id()))
-                .filter(m -> m.channelId().equals(source.id()))
+                .filter(m -> m.channelId().equals(channelId))
                 .filter(m -> !m.content().isEmpty())
                 .take(1)
                 .singleOrError();
@@ -197,10 +197,11 @@ public final class Utils {
         return List.copyOf(tokens);
     }
 
-    public static List<Single<User>> cachedOrFetchedUsers(final Catnip catnip, final List<String> ids) {
+    public static List<Single<User>> cachedOrFetchedUsers(final Catnip catnip, final Collection<String> ids) {
         return ids.stream()
-                .map(id -> catnip.cache().userAsync(Long.parseUnsignedLong(id))
-                        .onErrorResumeWith(catnip.rest().user().getUser(id)))
+                .map(id -> catnip.cache().user(Long.parseUnsignedLong(id))
+                        .onErrorResumeWith(catnip.rest().user().getUser(id).toMaybe())
+                        .toSingle())
                 .collect(Collectors.toUnmodifiableList());
     }
 

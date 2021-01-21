@@ -19,6 +19,6 @@ public class KickAction extends AbstractModAction {
     @Nonnull
     @Override
     public Completable apply(final Message message) {
-        return Completable.fromSingle(message.channel().sendMessage("DEBUG: kickt"));
+        return Completable.fromSingle(message.reply("DEBUG: kickt", false));
     }
 }

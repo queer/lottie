@@ -3,11 +3,11 @@ package gg.amy.bots.lottie.command;
 import com.mewna.catnip.entity.message.Message;
 import com.mewna.catnip.entity.message.ReactionUpdate;
 import com.mewna.catnip.entity.misc.ApplicationOwner;
-import com.mewna.catnip.entity.misc.Emoji;
 import com.mewna.catnip.entity.misc.Team;
 import com.mewna.catnip.entity.user.User;
 import com.mewna.catnip.entity.util.Permission;
 import com.mewna.catnip.shard.DiscordEvent;
+import com.mewna.catnip.util.rx.RxHelpers;
 import gg.amy.bots.lottie.Lottie;
 import gg.amy.bots.lottie.command.annotation.*;
 import gg.amy.bots.lottie.util.Utils;
@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
  * @author amy
  * @since 9/12/20.
  */
+@SuppressWarnings("ResultOfMethodCallIgnored")
 public class CommandHandler {
     private final Lottie lottie;
     private final Map<String, TextCommand> textCommands = new HashMap<>();
@@ -41,6 +42,7 @@ public class CommandHandler {
         this.lottie = lottie;
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public CommandHandler setup() {
         try(final ScanResult res = new ClassGraph().enableAllInfo().scan()) {
             res.getClassesWithMethodAnnotation(Names.class.getName())
@@ -125,10 +127,14 @@ public class CommandHandler {
     }
 
     public void invokeTextCommand(@Nonnull final Message source) {
-        // Ignore DMs etc.
-        if(source.guild() != null) {
-            @SuppressWarnings("ConstantConditions")
-            final var settings = lottie.database().guildSettings(source.guild().id());
+        RxHelpers.resolveMany(source.guild(), source.channel()).subscribe(pair -> {
+            final var guild = pair.getValue0();
+            final var channel = pair.getValue1();
+            if(guild == null || channel == null) {
+                return;
+            }
+
+            final var settings = lottie.database().guildSettings(guild.id());
             // Test prefix
             final String prefix;
             if(settings.prefix() != null) {
@@ -165,7 +171,7 @@ public class CommandHandler {
                     if(!cmd.owner() && !isOwner && cmd.perms() != null && !cmd.perms().isEmpty()) {
                         final var member = source.member();
                         //noinspection ConstantConditions
-                        if(!member.hasPermissions(source.channel().asGuildChannel(), cmd.perms())) {
+                        if(!member.hasPermissions(channel.asGuildChannel(), cmd.perms())) {
                             return;
                         }
                     }
@@ -179,8 +185,8 @@ public class CommandHandler {
                                 final var ctx = Context.builder()
                                         .lottie(lottie)
                                         .user(source.author())
-                                        .guild(source.guild())
-                                        .channel(source.channel().asTextChannel())
+                                        .guild(guild)
+                                        .channel(channel.asTextChannel())
                                         .mentions(users)
                                         .guildSettings(settings)
                                         .userSettings(lottie.database().userSettings(source.author().id()))
@@ -192,16 +198,21 @@ public class CommandHandler {
                     // TODO: Try to help them find the right command
                 }
             }
-        }
+        });
     }
 
     public void invokeReactionCommand(@Nonnull final ReactionUpdate source) {
-        // TODO
-        // Ignore DMs etc.
-        if(source.guild() != null) {
-            @SuppressWarnings("ConstantConditions")
-            final var settings = lottie.database().guildSettings(source.guild().id());
-            if(source.emoji().unicode() && source.user() != null && source.emoji().name() != null) {
+        RxHelpers.resolveMany(source.guild(), source.user(), source.channel()).subscribe(triplet -> {
+            final var guild = triplet.getValue0();
+            final var user = triplet.getValue1();
+            final var channel = triplet.getValue2();
+
+            if(guild == null || channel == null || user == null) {
+                return;
+            }
+
+            final var settings = lottie.database().guildSettings(guild.id());
+            if(source.emoji().unicode() && source.emoji().name() != null) {
                 // TODO: Handle custom emojis
                 final String emoji = source.emoji().name();
                 if(emoji != null && reactionCommands.containsKey(emoji.toLowerCase())) {
@@ -215,47 +226,47 @@ public class CommandHandler {
                             final Team team = lottie.info().team();
                             //noinspection ConstantConditions
                             isOwner = team.members().stream()
-                                    .anyMatch(e -> e.user().idAsLong() == source.user().idAsLong());
+                                    .anyMatch(e -> e.user().idAsLong() == user.idAsLong());
                         } else {
-                            if(source.user().idAsLong() != applicationOwner.idAsLong()) {
+                            if(user.idAsLong() != applicationOwner.idAsLong()) {
                                 return;
                             }
                             isOwner = true;
                         }
                     }
 
-                    // Test perms
-                    if(!cmd.owner() && !isOwner && cmd.perms() != null && !cmd.perms().isEmpty()) {
-                        final var member = source.guild().member(source.user().id());
-                        //noinspection ConstantConditions
-                        if(!member.hasPermissions(source.channel().asGuildChannel(), cmd.perms())) {
-                            return;
+                    final boolean finalIsOwner = isOwner;
+                    guild.member(user.id()).subscribe(member -> {
+                        // Test perms
+                        if(!cmd.owner() && !finalIsOwner && cmd.perms() != null && !cmd.perms().isEmpty()) {
+                            if(!member.hasPermissions(channel.asGuildChannel(), cmd.perms())) {
+                                return;
+                            }
                         }
-                    }
 
-                    // All checks passed, invoke
-                    final List<User> users = List.of(source.user());
-                    final var ctx = Context.builder()
-                            .lottie(lottie)
-                            .user(source.user())
-                            .guild(source.guild())
-                            .channel(source.channel().asTextChannel())
-                            .mentions(users)
-                            .guildSettings(settings)
-                            .userSettings(lottie.database().userSettings(source.userId()))
-                            .build();
+                        // All checks passed, invoke
+                        final List<User> users = List.of(user);
+                        final var ctx = Context.builder()
+                                .lottie(lottie)
+                                .user(user)
+                                .guild(guild)
+                                .channel(channel.asTextChannel())
+                                .mentions(users)
+                                .guildSettings(settings)
+                                .userSettings(lottie.database().userSettings(source.userId()))
+                                .build();
 
-                    try {
-                        cmd.method.invoke(cmd.source(), ctx);
-                    } catch(final IllegalAccessException | InvocationTargetException e) {
-                        e.printStackTrace();
-                    }
+                        try {
+                            cmd.method.invoke(cmd.source(), ctx);
+                        } catch(final IllegalAccessException | InvocationTargetException e) {
+                            e.printStackTrace();
+                        }
+                    });
                 } else {
                     // TODO: Try to help them find the right command
                 }
             }
-
-        }
+        });
     }
 
     @Value
